@@ -1,0 +1,90 @@
+---
+title: "Evidencia 2"
+author: "Alejandro Almaguer"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+# Librerias
+
+
+```{r}
+
+library(stats)
+library( psych )
+library(readxl)
+library(MASS)
+library(ISLR)
+library(fRegression)
+library(vcd)
+
+```
+
+```{r}
+base=read_xlsx("C:/Users/aalma/OneDrive/TEC/Carrera/5to semestre/1er Parcial/Algoritmos y análisis de datos (Gpo 6)/Evidencia/Evidencia 2/BaseOk.xlsx")
+```
+
+
+# Modelo LOGIT
+
+##Primero cargamos el modelo logit, el modelo logit es un modelo econometrico no lineal que se utiliza cuando la variable dependiente es dummy o binaria, lo que significa que solo puede tener 2 valores (0 y 1)
+
+##En el modelo logit la probabilidad de exito se evalua en la funcion G(z)=/\(z) 
+
+
+```{r}
+modelo_Logit<-glm(base$Default~ base$`WC/TA`+ base$`RE/TA`+ base$`EBIT/TA`+ base$`ME/TL`+ base$`S/TA`, data =base , family = binomial(link = "logit"))
+
+
+summary(modelo_Logit)
+
+```
+# Modelo Probit
+
+##Luego cargamos el modelo probit, el modelo probit al igual que el logit, es un modelo econometrico no lineal que se utiliza cuando la variable dependiente es dummy o binaria, lo que significa que solo puede tener 2 valores (0 y 1)
+
+##En el modelo probit la probabilidad de exito se evalua en la funcion G(z)=Φ(z)
+
+
+```{r}
+modelo_Probit<-glm(base$Default~ base$`WC/TA`+ base$`RE/TA`+ base$`EBIT/TA`+ base$`ME/TL`+ base$`S/TA`, data =base , family = binomial(link = "probit"))
+
+summary(modelo_Probit)
+```
+
+
+Estimamos los criterios de información para cada modelo
+
+
+```{r}
+CIA_Logit=AIC(modelo_Logit)
+CIA_Probit=AIC(modelo_Probit)
+CIA_Logit
+CIA_Probit
+
+```
+
+##Podemos observar que el modelo Logit tiene una AIC de 573.0514 mientras el modelo Probit tiene una AIC de 576.2561
+
+##El modelo con mejor ajuste en base al CIA es el Logit ya que el AIC es mas chico, lo que significa que este modelo es mas preciso que el probit y tiene una menor variabilidad de los errores con respecto a la media
+
+##Del modelo Logit podemos ver que las variables de RE/TA y ME/TL son las que mas tienen peso para la aprobacion o desaprobacion de un credito
+
+
+```{r}
+
+log.odds <- predict(modelo_Logit, data.frame(base$`RE/TA`<- 0.70, base$`ME/TL`<-1.1 ))
+
+
+Prob=exp(log.odds)/(1+exp(log.odds))
+Prob
+
+```
+
+Interpretación de coeficientes
+
+```{r}
+Prob*coef(modelo_Logit)
+```

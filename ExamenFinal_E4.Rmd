@@ -1,0 +1,66 @@
+---
+title: "Tema 3"
+author: "RPN"
+date: "29/6/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+# Librerias
+
+
+```{r}
+
+library(stats)
+library( psych )
+library(readxl)
+library(MASS)
+library(ISLR)
+library(fRegression)
+library(vcd)
+
+```
+
+```{r}
+base=read_xlsx("BaseIEDCHexamen.xlsx")
+```
+
+
+# Modelo LOGIT
+
+
+
+
+```{r}
+modelo_Logit<-glm( base$Y~ base$GDP+ base$IED_CH+ base$X1+ base$X1+ base$X2+ base$X3+ base$X4+ base$X5+ base$X5+ base$X6+ base$X7+ base$X8, data =base , family = binomial(link = "logit"))
+
+summary(modelo_Logit)
+```
+
+
+```{r}
+modelo_Probit<-glm( base$Y~ base$GDP+ base$IED_CH+ base$X1+ base$X1+ base$X2+ base$X3+ base$X4+ base$X5+ base$X5+ base$X6+ base$X7+ base$X8, data =base , family = binomial(link = "probit"))
+
+summary(modelo_Probit)
+```
+
+
+Estimamos los criterios de información para cada modelo
+
+
+```{r}
+CIA_Logit=AIC(modelo_Logit)
+CIA_Probit=AIC(modelo_Probit)
+CIA_Logit
+CIA_Probit
+```
+
+**Conclusión**
+**En conclusión el modelo anterior realizado de la forma logit y probit, se puede observar que ningúna de las variables tiene significancia por lo tanto al correr los criterios de información para cada modelo son iguales, debido a esto no se puede concluir cual es el mejor modelo a utilizar, por lo tanto se le recomienda agregar más variables o cambiar las actuales para poder mejorarlo y darle significancia, para de esta manera poder tomar la decisión de cuál es el mejor modelo para estimar la información futura necesaria**
+
+
+
+
+
+

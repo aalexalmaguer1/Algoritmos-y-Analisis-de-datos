@@ -1,0 +1,119 @@
+---
+title: "Tema 3"
+author: "RPN"
+date: "29/6/2021"
+output: html_document
+---
+
+# Librerias
+
+
+```{r}
+
+library(stats)
+library( psych )
+library(readxl)
+library(MASS)
+library(ISLR)
+library(fRegression)
+library(vcd)
+
+```
+
+```{r}
+base=read_xlsx("Hipotecas.xlsx")
+```
+
+
+# Modelo LOGIT
+
+
+
+
+```{r}
+modelo_Logit<-glm( Rechazo ~Ingreso + Familia  , data =base , family = binomial(link = "logit"))
+
+summary(modelo_Logit)
+```
+
+
+```{r}
+modelo_Probit<-glm( Rechazo ~Ingreso + Familia  , data =base , family = binomial(link = "probit"))
+
+summary(modelo_Probit)
+```
+
+
+Estimamos los criterios de información para cada modelo
+
+
+```{r}
+CIA_Logit=AIC(modelo_Logit)
+CIA_Probit=AIC(modelo_Probit)
+CIA_Logit
+CIA_Probit
+
+```
+
+
+El modelo con mejor ajuste en base al CIA es el probit
+
+
+```{r}
+
+log.odds <- predict(modelo_Probit, data.frame(Ingreso = 32.86,Familia=2.71 ))
+
+
+Prob=exp(log.odds)/(1+exp(log.odds))
+Prob
+
+```
+
+Interpretación de coeficientes
+
+```{r}
+Prob*coef(modelo_Probit)
+```
+
+
+
+```{r}
+
+predicciones <- ifelse(test = modelo_Probit$fitted.values > 0.5, yes =1, no = 0)
+matriz_confusion <- table(modelo_Probit$model$Rechazo, predicciones,dnn = c("observaciones","predicciones"))
+matriz_confusion
+
+```
+
+EStimamos una medida del ajuste
+
+
+
+```{r}
+((62+3)/(64+6))*100
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

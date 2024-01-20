@@ -1,0 +1,298 @@
+---
+title: "Algorithmic trading applied to portfolio management"
+output:
+  html_document: default
+  word_document: default
+---
+
+# Algorithmic trading applied to portfolio management
+
+
+Momentum in stock returns is generally described as the continuation of those stocks that have performed well recently to do well over the subsequent 1–12 months. On the contrary, long-term reversals refer to the pattern of winning (loser) stocks tending to become losers (winners) in the long run, usually 3–5 years.
+ 
+ In general, momentum and reversals in stock prices is evaluated by sorting stocks into portfolios based on their past return performance and then evaluating the future performance of these portfolios. Although the process of forming winner and loser portfolios to assess momentum and reversals in stock prices is fairly standardized in the literature, the decisions of how to construct the winner and loser portfolios (equally weighted vs. value-weighted) and how to measure risk-adjusted return performance (CAPM, Fama-French 3-factor risk models) remain topics of debate.
+ 
+ A momentum (reversal) portfolio is then created by buying (shorting) the winner portfolio and shorting (buying) the loser portfolio and then evaluating the performance of this zero-cost, long-short portfolio over the next K months. 
+ 
+ So, for example, a 6/6 momentum strategy is a momentum strategy that sorts stocks based on their past 6-month returns and creates a long-short portfolio by buying the winner portfolio and shorting the loser portfolio (as defined earlier) and holding the position for 6 months.
+
+
+```{r include=FALSE}
+library(quantmod)
+library(xml2)
+library(rvest)
+library(openxlsx)
+library(readxl)
+```
+
+
+For this example, we could use the Excel file or 
+```{r warning=FALSE}
+df<- read.xlsx("C:/Users/aalma/OneDrive/TEC/Carrera/5to semestre/1er Parcial/Algoritmos y análisis de datos (Gpo 6)/Trabajos en clase/Trabajo 20210831/Data.xlsx")
+```
+
+The Api to download the tickers from yahoo finance
+```{r}
+yf <- "https://finance.yahoo.com/quote/%5Emxx/components/"
+
+html <- read_html(yf)
+
+# To get the node a, wich contains characters 
+node <- html_nodes(html,"a")
+
+# To read the text in the node
+node<-html_text(node, trim=TRUE)
+
+# To get the elements that have USD (the tickers). For the IPC tickers, replace "USD" with ".MX". For other tickers, print the node object and look for patterns or select by rows. 
+tickers<-grep(pattern = ".MX", x = node, value = TRUE)
+
+#to eliminate tickers whiout information
+tickers<-tickers
+tickers<-tickers[-27]
+tickers<-tickers[-27]
+tickers<-tickers[-27]
+tickers<-tickers[-26]
+tickers<-tickers[-26]
+tickers
+```
+
+This code gets the current IPC tickers from yahoo finance. The stock composition could change over time, them if you want to replicate the example of this document, in the file data.xlsx you will find the sample close prices. T his code gets the current IPC tickers from yahoo finance. The stock composition could change over time, them if you want to replicate the example of this document,  you will find the sample close prices.
+
+```{r}
+tickers<-colnames(df)
+tickers<-tickers[-1]
+
+```
+
+
+
+```{r include=FALSE}
+getSymbols(tickers,from="2021-01-01",to="2021-08-30")
+n<-length(tickers)
+df<-get(tickers[1])[,6]
+
+# loop
+for (i in 2:n){
+df2<-get(tickers[i])[,6]
+df<-cbind(df,df2)
+}
+df
+```
+
+This code gets the 1st and the 3rd tranches in one object. Also, it gets the daily returns for each stock, which we use to estimate the covariance matrix.
+
+```{r}
+ret <-diff(log(df)) # matriz de rendimiento
+reta<-apply(ret,2,mean,na.rm=T) # rend promedio arith
+reta<-data.frame(reta)
+```
+
+```{r}
+sd <- sd(df[,1],na.rm = T)
+
+
+```
+
+Sort
+```{r include=FALSE}
+library(dplyr)
+
+reta1<-reta %>% arrange(desc(reta))
+
+detach("package:dplyr", unload=TRUE)
+```
+
+
+```{r}
+m<-dim(reta1)[1] # numero de tickers
+n<-round(m/3) # tamaño de la muestra de cada tranche
+reta1L<-data.frame(reta1[1:n,]) 
+reta1S<-data.frame(reta1[(m-n):m,])
+rownames(reta1L)<-rownames(reta1)[1:n]
+rownames(reta1S)<-rownames(reta1)[(m-n):m]
+```
+
+```{r}
+colnames(reta1L)<-"ret"
+colnames(reta1S)<-"ret"
+reta1LS<-data.frame(rbind(reta1L,reta1S))
+
+```
+# Para hacer la partición 
+
+#retL2 <- reta1 %>% top_frac(0.33)
+#ret2S <- reta1 %>% top_frac(-0.68)
+
+```{r}
+ret2<- ret[,rownames(reta1LS)]
+cov<-cov(ret2,use="complete.obs")
+
+
+weL<-  runif(n, 0, 1)
+s<-sum(weL)
+weL<-(weL/s)*1.1
+
+weS<-  runif((m-n):m, 0, 1)
+sS<-sum(weS)
+weS<-(-weS/sS)*.1
+#weL# vector de pesos aleatotios
+# cov%*%we 
+#para generar aleatorios runif(le1, 0, 1)
+weLS<-data.frame(c(weL,weS))
+rownames(weLS)<-rownames(reta1LS)
+colnames(weLS)<-"weLS"
+weLS
+```
+
+la desv del portafolio
+```{r}
+covm<-as.matrix(cov)
+weLSm<-as.matrix(weLS)
+covt<-covm%*%weLSm
+covLS<-((t(weLSm)%*%covt)*252)^.5 # desv anualizada
+covLS    # desv mult
+```
+
+```{r}
+reta1LSm<-as.matrix(reta1LS)
+reta1LSf<-(t(weLSm)%*%reta1LSm)*252 #rend esperado del 
+reta1LSf
+# num simulaciones que se quiere realizar
+sim<-10
+# número de tickers del portafolio
+nt<-length(rownames(reta1LS))
+#Matriz para almacenar los resultados del loop
+port<-matrix(0,sim,3+nt)
+port[1,1]<-reta1LSf # rend esp por
+port[1,2]<-covLS # las desv est del por 
+sharpe<-(reta1LSf-.05)/covLS # rf=.05  
+port[1,3]<-sharpe # antes decía covLS
+port[1,4:(3+nt)]<-weLSm[,1]
+colnames(port)<-c("rend","desv_est","sharpe",rownames(reta1LS))
+```
+
+
+Copie y pegué desde weL<-  runif(n, 0, 1) hasta mi rengñon 167 en un solo chunk
+```{r}
+sim<-2000
+nt<-length(rownames(reta1LS))
+#Matriz para almacenar los resultados del loop
+port<-matrix(0,sim,3+nt)
+
+for (i in 1:sim){
+   
+weL<-  runif(n, 0, 1)
+s<-sum(weL)
+weL<-(weL/s)*1.1
+weS<-  runif((m-n):m, 0, 1)
+sS<-sum(weS)
+weS<-(-weS/sS)*.1
+weLS<-data.frame(c(weL,weS))
+rownames(weLS)<-rownames(reta1LS)
+colnames(weLS)<-"weLS"
+#covm<-as.matrix(cov)
+weLSm<-as.matrix(weLS)
+covt<-covm%*%weLSm
+covLS<-((t(weLSm)%*%covt)*252)^.5 # desv anualizada
+reta1LSm<-as.matrix(reta1LS)
+reta1LSf<-(t(weLSm)%*%reta1LSm)*252 #rend eserado 
+# num simulaciones que se quiere realizar
+port[i,1]<-reta1LSf
+port[i,2]<-covLS  
+sharpe<-(reta1LSf-.05)/covLS  
+port[i,3]<-sharpe
+port[i,4:(3+nt)]<-weLSm[,1]
+}
+colnames(port)<-c("rend","desv_est","sharpe",rownames(reta1LS))
+```
+
+```{r}
+plot(port[,2],port[,1])
+```
+
+```{r}
+for (i in 2:sim)
+   {
+weL<-  runif(n, 0, 1)
+s<-sum(weL)
+weL<-(weL/s)*1.1
+weS<-  runif((m-n):m, 0, 1)
+sS<-sum(weS)
+weS<-(-weS/sS)*.1
+weLS<-data.frame(c(weL,weS))
+rownames(weLS)<-rownames(reta1LS)
+colnames(weLS)<-"weLS"
+weLSm<-as.matrix(weLS)
+covt<-covm%*%weLSm
+covLS<-((t(weLSm)%*%covt)*252)^.5 # desv anualizada
+reta1LSm<-as.matrix(reta1LS)
+reta1LSf<-(t(weLSm)%*%reta1LSm)*252 #rend eserado del 
+port[i,1]<-reta1LSf
+port[i,2]<-covLS  
+sharpe<-(reta1LSf-.05)/covLS  
+port[i,3]<-covLS
+port[i,4:(3+nt)]<-weLSm[,1]
+}
+```
+
+
+
+```{r}
+library(ggplot2)
+port2<-as.data.frame(port)
+ggplot(port2, aes(desv_est,rend))+ geom_point(alpha=.5, color="darkred")
+
+```
+
+```{r}
+plot(port[,2],port[,1], xlab = "Riesgo", ylab="Rendimiento", cex = 0.2, pch = 20)
+
+```
+
+```{r}
+plot(port[,2],port[,1],xlab ="Desv est",ylab="Rend del por")
+
+```
+
+The next code creates 1,000 simulations of weights. The code generates aleatory numbers, limiting to invest 100% of the wealth in the stocks in the 1rst tranche (high return). Also, it limits investing 10% of the wealth in the 3rd tranche (low return), but in a short position (you could change that % in line 15, replacing the 0.1 by the % you want). In Table 2, the code prints the returns, standard deviation, Sharpe of the portfolio, and the set of simulated weights. Finally, it orders the results based on the highest Sharpe index. The risk-free rate for this example is 5% .
+
+Note: Regarding the random seed(), students often get nervous when they do not get the same result as the professor because np.random.rand generate aleatory numbers. Then it is useful to take out the # before random seed and get the same result. After everyone gets the same results, insert the # again.
+
+
+
+# Appendix
+
+Functions
+
+An R function is created by using the keyword function. The basic syntax of an R function definition is as follows −
+
+function_name <- function(arg_1, arg_2, ...) {
+   Function body 
+}
+
+
+Create a function to print squares of numbers in sequence.
+
+```{r}
+myfun <- function(a) {
+   for(i in 1:a) {
+      b <- i^2
+      print(b)
+   }
+}	
+```
+
+
+
+```{r}
+myfun(5)
+```
+
+```{r}
+# Create a function with arguments.
+new.function <- function(a,b,c) {
+   result <- a * b + c
+   print(result)
+}
+new.function(5,3,11)
+```

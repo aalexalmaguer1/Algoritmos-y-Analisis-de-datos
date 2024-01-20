@@ -1,0 +1,39 @@
+---
+title: "Actividad 2"
+output: html_document
+---
+
+## Yahoo finance API
+
+```{r include=FALSE}
+library(quantmod)
+
+
+```
+
+Getting the data from a specific date:
+getSymbols("symbol", from="YY/m/d",to="YY/m/d")
+
+```{r}
+getSymbols("WMT",from="2019/01/01",to="2021/08/23")
+getSymbols("AAL",from="2019/01/01",to="2021/08/23")
+getSymbols("BABA",from="2019/01/01",to="2021/08/23")
+getSymbols("AMZN",from="2019/01/01",to="2021/08/23")
+getSymbols("MSFT",from="2019/01/01",to="2021/08/23")
+
+```
+
+```{r}
+datedata<-data.frame("WMT")
+datedata<-as.Date(datedata,format="%y-%m-%d")
+data<-xts(df,order.by = as.Date(datedata),as.POSIXct("%y-%m-%d"))
+
+datedata2<-df2[,1]
+datedata2<-as.Date(datedata2,format="%y-%m-%d")
+data2<-xts(df2,order.by = as.Date(datedata2),as.POSIXct("%y-%m-%d"))
+
+#data3<-cbind(data,data2)
+```
+
+
+

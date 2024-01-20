@@ -1,0 +1,195 @@
+---
+title: "Tarea Datos Masivos"
+author: "Hector Magana"
+date: "1/11/2019"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+La siguiente tarea busca reforzar tu aprendiza de los temas cubiertos en clase, así como poner en práctica tus habilidades en el manejo de datos masivos.
+
+```{r}
+library(readxl)
+library(MASS)
+library(stats)
+library(stats)
+library(psych )
+library(dplyr)
+```
+
+```{r}
+mis_datos <- read.csv("C:/Users/aalma/OneDrive/TEC/Carrera/5to semestre/1er Parcial/Algoritmos y análisis de datos (Gpo 6)/Tareas/Actividad 1/cars.csv")
+```
+
+Resuelve cada uno de los puntos para la base de datos *cars.csv* No olvides cargar la libreria ´dplyr´antes de iniciar con tu programa
+
+
+### Pregunta 1
+
+Almacena la información del archivo *cars.csv* en una variable llamada mis_datos y revisa su estructura con la función str()
+
+```{r}
+str(mis_datos)
+
+```
+
+Como puedes ver, la base de datos cuenta con 428 observaciones y 15 variables.
+Las variables incluidas son:
+- Make = La marca del fabricante del automóvil
+- Model = El modelo del automóvil
+- Type = El tipo de automóvil
+- Origin = En dónde fue fabricado
+- DriveTrain = Indica el tipo de transmición
+- MSRP = Es el precio de venta en dólares sugerido por el fabricate
+- Invoice = Es el valor de la factura del automóvil
+- EngineSize = Es el tamaño del motor
+- Cylinders = Indica con cuántos cilindros cuenta
+- Horsepower = La potencia del automóvil en caballos de fuerza
+- MPG_City = Millas por galón de combustible en la ciudad
+- MPG_Highway = Millas por galón de combustible en carretera
+- Weight = Peso del automóvil en libras
+- Wheelbase = La distancia que hay entre el eje delantero y el eje trasero 
+              en pulgadas
+- Length = La longitud del automóvil en pulgadas
+
+### Pregunta 2
+
+Revisa si en la variable mis_datos existen missing values, de ser así reemplazalos por la media.
+
+```{r}
+summary(mis_datos)
+
+```
+```{r}
+NO.NA=na.omit(mis_datos)
+```
+
+```{r}
+Media_msrp=mean(mis_datos$MSRP,na.rm = T)
+Media_invoice=mean(mis_datos$Invoice,na.rm = T)
+Media_enginesize=mean(mis_datos$EngineSize,na.rm = T)
+Media_cylinders=mean(mis_datos$Cylinders,na.rm = T)
+Media_horsepower=mean(mis_datos$Horsepower,na.rm = T)
+Media_mpg_city=mean(mis_datos$MPG_City,na.rm = T)
+Media_mpg_highway=mean(mis_datos$MPG_Highway,na.rm = T)
+Media_weight=mean(mis_datos$Weight,na.rm = T)
+Media_wheelbase=mean(mis_datos$Wheelbase,na.rm = T)
+Media_length=mean(mis_datos$Length,na.rm = T)
+
+```
+  
+### Pregunta 3
+Utilizando algoritmos con la variable mis_datos, responde las siguientes preguntas:
+
+```{r}
+library(ggplot2)
+```
+¿Qué marca produce más vehículos y qué marca produce menos?
+```{r}
+sum(mis_datos$Make == "Acura")
+sum(mis_datos$Make == "Audi")
+sum(mis_datos$Make == "BMW")
+sum(mis_datos$Make == "Buick")
+sum(mis_datos$Make == "Cadillac")
+sum(mis_datos$Make == "Chevrolet")
+sum(mis_datos$Make == "Chrysler")
+sum(mis_datos$Make == "Dodge")
+sum(mis_datos$Make == "Ford")
+sum(mis_datos$Make == "GMC")
+sum(mis_datos$Make == "Honda")
+sum(mis_datos$Make == "Hummer")
+sum(mis_datos$Make == "Hyundai")
+sum(mis_datos$Make == "Infiniti")
+sum(mis_datos$Make == "Isuzu")
+sum(mis_datos$Make == "Jaguar")
+sum(mis_datos$Make == "Jeep")
+sum(mis_datos$Make == "Kia")
+sum(mis_datos$Make == "Land Rover")
+sum(mis_datos$Make == "Lexus")
+sum(mis_datos$Make == "Lincoln")
+sum(mis_datos$Make == "MINI")
+sum(mis_datos$Make == "Mazda")
+sum(mis_datos$Make == "Mercedes-Benz")
+sum(mis_datos$Make == "Mercury")
+sum(mis_datos$Make == "Mitsubishi")
+sum(mis_datos$Make == "Nissan")
+sum(mis_datos$Make == "Oldsmobile")
+sum(mis_datos$Make == "Pontiac")
+sum(mis_datos$Make == "Porshe")
+sum(mis_datos$Make == "Saab")
+sum(mis_datos$Make == "Saturn")
+sum(mis_datos$Make == "Sciob")
+sum(mis_datos$Make == "Subaru")
+sum(mis_datos$Make == "Susuki")
+sum(mis_datos$Make == "Toyota")
+sum(mis_datos$Make == "Volkswagen")
+sum(mis_datos$Make == "Volvo")
+
+
+
+
+```
+
+```{r}
+min(mis_datos$Make)
+max(mis_datos$Make)
+```
+
+¿Cuántos autos se producen por región con transmisión delantera, cuántos con transmisión trasera y cuántos con doble transmisión (All)?
+
+```{r}
+table(mis_datos$DriveTrain)
+#Transmisión delantera es Front
+#Transmisión trasera es Rear
+#Ambas transmisiones es All
+```
+
+### Pregunta 4
+
+Encuentra cuál es el precio sugerido más caro, cuál es el precio sugerido más barato, las millas por galón promedio para ciudad y las millas por galón promedio para carretera
+
+```{r}
+max(mis_datos$MSRP)
+min(mis_datos$MSRP)
+mean(mis_datos$MPG_City)
+mean(mis_datos$MPG_Highway)
+```
+
+
+### Pregunta 5 
+
+Selecciona solo las variables Make, Model, Type, Origin, DriveTrain, MSRP, Weight, Wheelbase y Lenght. Conserva solo las observaciones cuyo DriveTrain sea Front y almacena esta información en una variable llamada mis_nuevos_datos. 
+
+Imprime las primeras observaciones de la variable mis_nuevos_datos
+
+```{r}
+mis_nuevos_datos = mis_datos[, c(1,2,3,4,5,6,13,14,15)]
+head(mis_nuevos_datos)
+```
+
+### Pregunta 6
+
+Con la información de la variable mis_nuevos_datos, necesitamos crear 3 nuevas variables, la primera llamada Weight_kilo que indique cuál es el peso del automóvil en kilos, la segunda llamada Wheelbase_cm que muestre el valor de la variable  Wheelbase en centímetros, y una última variable llamada Length_cm que indique la longitud del vehículo en centímetros. Almacena toda esta información dentro de la variable mis_nuevos_datos
+
+```{r}
+mis_nuevos_datos1 = mis_datos[, c(13,14,15)]
+```
+
+### Pregunta 7
+
+Con la información de la variable mis_nuevos_datos, crea una nueva variable llamada opinion que esté en función del precio sugerido para la venta. Si el precio es mayor a 60,000 el valor de la variable opinion debe ser "Expensive", si el precio está entre 60,000 y 30,000, la variable opinion debe decir "Normal". Y si el precio es menor a 30,000 la variable opinion debe sugerir "Unexpensive". Almacena la información en la variable mis_nuevos_datos
+
+```{r}
+opinion = mis_datos[, c(6)]
+if (opinion < 30000) {
+print("Unexpensive")
+} else if (opinion > 60000) {
+print("Expensive")
+} else
+print("Normal")
+```
+
